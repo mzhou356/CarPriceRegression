@@ -28,7 +28,7 @@ def readData(dirpath,ext):
             datas.append(df)
     return pd.concat(datas,axis=0)
 
-def EDA_CAT_func(colname,target,df,fontsize, figsize,layout):
+def EDA_CAT_func(colname,target,df,fontsize, figsize,layout,boxplot=False):
     """
     This function performs basic exploratory data analyses on a specific feature column,
     This column needs to be categorical in nature. 
@@ -49,10 +49,11 @@ def EDA_CAT_func(colname,target,df,fontsize, figsize,layout):
     """
     groupedDF = df.groupby(colname)
     count_df = groupedDF[target].count().reset_index().sort_values(target)
-    groupedDF.boxplot(column=target,fontsize=fontsize,
+    if boxplot:
+        groupedDF.boxplot(column=target,fontsize=fontsize,
                                        figsize=figsize,layout=layout)
-    plt.show()
-    groupedDF[target].median().reset_index().plot.scatter(x=colname,y=target)
+        plt.show()
+    groupedDF[target].median().reset_index().sort_values("price").plot.scatter(x=colname,y=target)
     plt.show()
     return count_df
 
