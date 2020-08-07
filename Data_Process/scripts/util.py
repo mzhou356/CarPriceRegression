@@ -22,9 +22,11 @@ def readData(dirpath,ext):
     datas = []
     for filename in os.listdir(dirpath):
         if filename.endswith(ext):
+            brand = filename.split(".")[0].split("_")[-1]
             df = pd.read_csv(dirpath+filename)
+            df["brand"] = brand
             df.columns = ['model', 'year', 'price', 'transmission', 
-                          'mileage', 'fuelType', 'tax','mpg', 'engineSize']
+                          'mileage', 'fuelType', 'tax','mpg', 'engineSize',"brand"]
             datas.append(df)
     return pd.concat(datas,axis=0)
 
@@ -53,7 +55,7 @@ def EDA_CAT_func(colname,target,df,fontsize, figsize,layout,boxplot=False):
         groupedDF.boxplot(column=target,fontsize=fontsize,
                                        figsize=figsize,layout=layout)
         plt.show()
-    groupedDF[target].median().reset_index().sort_values("price").plot.scatter(x=colname,y=target)
+    groupedDF[target].median().reset_index().sort_values("price").plot.scatter(x=colname,y=target,rot=90,figsize=figsize)
     plt.show()
     return count_df
 
