@@ -36,7 +36,7 @@ def EDA_CAT_func(colname,target,df,fontsize, figsize,layout,boxplot=False):
     This column needs to be categorical in nature. 
     
     Args:
-    colname: a string, the feature column name. 
+    colname: a string, the feature column name or a list of strings if group by more than one. 
     target: a string, the target column name.
     df: a pandas dataframe, the original data. 
     fontsize: fontsize for boxplot
