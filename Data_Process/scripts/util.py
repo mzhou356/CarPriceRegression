@@ -6,7 +6,7 @@ import os
 import numpy as np 
 import pandas as pd 
 import matplotlib.pyplot as plt 
-
+from scipy.stats import chisquare
 
 def readData(dirpath,ext):
     """
@@ -75,4 +75,15 @@ def binning_func(col,thresholds):
         if col>=k[0] and col<=k[1]:
             return v
     
+def chiSquareTest(col1,col2):
+    """
+    This function allows this callable function to be used for pandas corr method parameter. 
     
+    Args:
+    col1: a string, column name.
+    col2: a string, column name.
+    
+    Returns:
+    pvalue for one way chisquare test. 
+    """
+    return chisquare(col1,col2).pvalue
