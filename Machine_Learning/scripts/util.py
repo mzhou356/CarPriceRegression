@@ -27,3 +27,30 @@ def linear_feature_importance(features,model):
     plt.legend(loc="lower right")
     plt.show()
     return table 
+
+def regression_metrics(model,x_train,y_train,x_test,y_test):
+    """
+    This function outputs model scores (r2 and root mean squared error) 
+    
+    args:
+    model: a trained model 
+    x_train: train features, pandas dataframe
+    y_train: train label, pandas series
+    x_test: test features, pandas dataframe
+    y_test: test label, pandas series
+    
+    returns:
+    r2 score for both train and test 
+    root mean squared error for both train and test 
+    as a pandas dataframe
+    """
+    pred_train = model.predict(x_train)
+    pred_test = model.predict(x_test)
+    r2_train = r2_score(y_train,pred_train)
+    r2_test = r2_score(y_test,pred_test)
+    rmse_train = np.sqrt(mean_squared_error(y_train,pred_train))
+    rmse_test = np.sqrt(mean_squared_error(y_test,pred_test))
+    metric_table = pd.DataFrame({"r2_score":[r2_train,r2_test],"rmse":[rmse_train,rmse_test]},
+                                index=["train","test"])
+    return metric_table
+    
