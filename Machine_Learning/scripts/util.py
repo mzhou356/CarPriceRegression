@@ -30,7 +30,7 @@ def linear_feature_importance(features,model):
 
 def regression_metrics(model,x_train,y_train,x_test,y_test):
     """
-    This function outputs model scores (r2 and root mean squared error) 
+    This function outputs model scores (r2 and root mean squared error)
     
     args:
     model: a trained model 
@@ -53,4 +53,31 @@ def regression_metrics(model,x_train,y_train,x_test,y_test):
     metric_table = pd.DataFrame({"r2_score":[r2_train,r2_test],"rmse":[rmse_train,rmse_test]},
                                 index=["train","test"])
     return metric_table
+   
+def price_diff(model,features,label):
+    """
+    This function outputs a dataframe with price diff info 
+    
+    args:
+    features: dataframe features
+    label: label column  
+    data: original data
+    
+    returns:
+    a dataframe with price difference and feature information. 
+    """
+    result_table = features.copy()
+    pred_price = model.predict(features)
+    diff = (label-pred_price)/label*100
+    result_table["price_diff_pct"]=diff
+    result_table["price_diff_abs"]=np.abs(diff)
+    return result_table
+    
+    
+    
+    
+    
+    
+    
+    
     
