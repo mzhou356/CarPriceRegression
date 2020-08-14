@@ -30,7 +30,7 @@ def linear_feature_importance(features,model,tree_model=False):
     plt.title("bottom 20 features")
     plt.legend(loc="lower right")
     plt.show()
-    return table 
+    return table.sort_values("score",ascending=False) 
 
 def regression_metrics(model,x_train,y_train,x_test,y_test):
     """
