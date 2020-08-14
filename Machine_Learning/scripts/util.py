@@ -5,18 +5,22 @@ from sklearn.metrics import r2_score,mean_squared_error
 from sklearn.model_selection import GridSearchCV
 
 
-def linear_feature_importance(features,model):
+def linear_feature_importance(features,model,tree_model=False):
     """
     This function creates model feature importance for linear regression
     
     args:
     features: cols of features, a list 
     model: linear regression model 
+    tree_model: boolean, true or false 
     
     returns:
     feature importance pandas dataframe and a bar plot
     """
-    coefs = model.coef_
+    if tree_model:
+        coefs = model.feature_importances_
+    else:
+        coefs = model.coef_
     table = pd.DataFrame({"features":features,"score":np.abs(coefs)})
     table.sort_values("score",ascending=False).head(20).plot.barh(x="features",y="score",figsize=(6,8),label="coef")
     plt.title("top 20 features")
@@ -26,7 +30,7 @@ def linear_feature_importance(features,model):
     plt.title("bottom 20 features")
     plt.legend(loc="lower right")
     plt.show()
-    return table 
+    return table.sort_values("score",ascending=False) 
 
 def regression_metrics(model,x_train,y_train,x_test,y_test):
     """
@@ -52,6 +56,7 @@ def regression_metrics(model,x_train,y_train,x_test,y_test):
     rmse_test = np.sqrt(mean_squared_error(y_test,pred_test))
     metric_table = pd.DataFrame({"r2_score":[r2_train,r2_test],"rmse":[rmse_train,rmse_test]},
                                 index=["train","test"])
+    metric_table["price_diff_abs_max"] = price_diff(model,x_test,y_test)["price_diff_abs"].max()
     return metric_table
    
 def price_diff(model,features,label):
