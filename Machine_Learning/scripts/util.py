@@ -5,18 +5,22 @@ from sklearn.metrics import r2_score,mean_squared_error
 from sklearn.model_selection import GridSearchCV
 
 
-def linear_feature_importance(features,model):
+def linear_feature_importance(features,model,tree_model=False):
     """
     This function creates model feature importance for linear regression
     
     args:
     features: cols of features, a list 
     model: linear regression model 
+    tree_model: boolean, true or false 
     
     returns:
     feature importance pandas dataframe and a bar plot
     """
-    coefs = model.coef_
+    if tree_model:
+        coefs = model.feature_importances_
+    else:
+        coefs = model.coef_
     table = pd.DataFrame({"features":features,"score":np.abs(coefs)})
     table.sort_values("score",ascending=False).head(20).plot.barh(x="features",y="score",figsize=(6,8),label="coef")
     plt.title("top 20 features")
