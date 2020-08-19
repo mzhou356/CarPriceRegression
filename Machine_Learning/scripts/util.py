@@ -1,8 +1,12 @@
 import matplotlib.pyplot as plt 
+import graphviz
 import numpy as np
 import pandas as pd
+from sklearn import tree
 from sklearn.metrics import r2_score,mean_squared_error
 from sklearn.model_selection import GridSearchCV
+
+
 
 
 def linear_feature_importance(features,model,tree_model=False):
@@ -77,6 +81,19 @@ def price_diff(model,features,label):
     result_table["price_diff_pct"]=diff
     result_table["price_diff_abs"]=np.abs(diff)
     return result_table
+
+def tree_plot(model,feature_names):
+    """
+    This function outputs decision tree plot 
+    
+    args:
+    model: decision tree or random forest 
+    features_names: a list of feature names.
+    """
+    dot_data = tree.export_graphviz(model,feature_names=feature_names,
+                                    rounded=True)
+    graph = graphviz.Source(dot_data,format="png")
+    return graph
     
     
     
