@@ -40,7 +40,7 @@ def linear_feature_importance(features,model,tree_model=False):
     plt.show()
     return table.sort_values("score",ascending=False) 
 
-def regression_metrics(model,x_train,y_train,x_test,y_test):
+def regression_metrics(model,x_train,y_train,x_test,y_test,NN=False,pred_train=None,pred_test=None):
     """
     This function outputs model scores (r2 and root mean squared error)
     
@@ -56,15 +56,22 @@ def regression_metrics(model,x_train,y_train,x_test,y_test):
     root mean squared error for both train and test 
     as a pandas dataframe
     """
-    pred_train = model.predict(x_train)
-    pred_test = model.predict(x_test)
+    if NN:
+        pred_train = pred_train
+        pred_test = pred_test
+    else:
+        pred_train = model.predict(x_train)
+        pred_test = model.predict(x_test)
     r2_train = r2_score(y_train,pred_train)
     r2_test = r2_score(y_test,pred_test)
     rmse_train = np.sqrt(mean_squared_error(y_train,pred_train))
     rmse_test = np.sqrt(mean_squared_error(y_test,pred_test))
     metric_table = pd.DataFrame({"r2_score":[r2_train,r2_test],"rmse":[rmse_train,rmse_test]},
                                 index=["train","test"])
-    metric_table["price_diff_abs_max"] = price_diff(model,x_test,y_test)["price_diff_abs"].max()
+    metric_table["price_diff_abs_max"] = [np.max(np.abs((y_train-pred_train)/y_train*100)),
+                                          np.max(np.abs((y_test-pred_test)/y_test*100))
+                                         ]
+                                          
     return metric_table
    
 def price_diff(model,features,label):
