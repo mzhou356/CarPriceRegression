@@ -126,9 +126,25 @@ def make_tensor_dataset(X,y,batch_size):
                  y.values)).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE).shuffle(X.shape[0])
     return data_set  
     
+
+def make_model(sizes,input_size, metrics, l2 = 10e-5, lr = 1e-4):
+    """
+    This function creates tensorflow regression model and use l2 to regularize the 
+    activate output. 
     
-    
-    
-    
-    
-    
+    Args:
+    sizes: a list of integer indicating num of hidden nodes
+    input_size: num of input features, an integer
+    l2:option input for activation regularizer to prevent overfitting of training data 
+    lr: for optimizer adam, gradient descent step size 
+    metrics: metrics for optimizing the model during tuning 
+    """
+    layers = [tfkl.InputLayer(input_shape=input_size)]
+    for s in sizes:
+        layers.append(tfkl.Dense(units=s,activation=tf.nn.leaky_relu,activity_regularizer=tfk.regularizers.l2(l2)))
+    layers.append(tfkl.Dense(units=1))
+    model = tfk.Sequential(layers, name = "NN_regressor")
+    model.compile(optimizer = tf.optimizers.Adam(learning_rate=lr), 
+                  loss = "mse",
+                  metrics = metrics)
+    return model   
