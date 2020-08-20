@@ -148,3 +148,24 @@ def make_model(sizes,input_size, metrics, l2 = 10e-5, lr = 1e-4):
                   loss = "mse",
                   metrics = metrics)
     return model   
+
+def plot_metrics(history,metric):
+    """
+    This function plots the metric value for train and test 
+    
+    Arg:
+    history: a tensorflow.python.keras.callbacks.History object 
+    metric: a string, type of metric to plot 
+    
+    Returns:
+    A plot that shows 2 overlapping loss versus epoch images. red is for test and blue is for train 
+    
+    """
+    history = history.history
+    plt.plot(history[metric], color="blue", label="train")
+    plt.plot(history[f"val_{metric}"], color="red", label="test")
+    plt.xlabel("epoch")
+    plt.ylabel(metric)
+    plt.title("model training results")
+    plt.legend(loc="best")
+    plt.show()
