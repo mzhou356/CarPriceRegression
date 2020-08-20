@@ -2,11 +2,15 @@ import matplotlib.pyplot as plt
 import graphviz
 import numpy as np
 import pandas as pd
+import tensorflow
+import tensorflow.compat.v2 as tf 
 from sklearn import tree
 from sklearn.metrics import r2_score,mean_squared_error
 from sklearn.model_selection import GridSearchCV
+tensorflow.compat.v1.logging.set_verbosity(tensorflow.compat.v1.logging.ERROR)
 
-
+tfk = tf.keras;
+tfkl=tf.keras.layers
 
 
 def linear_feature_importance(features,model,tree_model=False):
@@ -95,7 +99,32 @@ def tree_plot(model,feature_names):
     graph = graphviz.Source(dot_data,format="png")
     return graph
     
+def set_gpu_limit(n):
+    """
+    This function sets the max num of GPU in G to minimize overuse GPU per session.
     
+    args:
+    n: a float, num of GPU in G.
+    """
+    gpus = tf.config.experimental.list_physical_devices("GPU")
+    tf.config.experimental.set_virtual_device_configuration(gpus[0],
+    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*n)]) 
+    
+def make_tensor_dataset(X,y,batch_size):
+    """
+    This function generates tensorflow train and test dataset for NN.
+    
+    args:
+    X: a pandas dataframes, features 
+    y: a pandas series, label 
+    batch_size: training batch size for each shuffle 
+    
+    returns:
+    tensforflow dataset
+    """
+    data_set = tf.data.Dataset.from_tensor_slices((X.values,
+                 y.values)).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE).shuffle(X.shape[0])
+    return data_set  
     
     
     
