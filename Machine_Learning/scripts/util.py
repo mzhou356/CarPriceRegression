@@ -75,7 +75,7 @@ def regression_metrics(model,x_train,y_train,x_test,y_test,batch_size=None):
                                           
     return metric_table
    
-def price_diff(model,features,label):
+def price_diff(model,features,label,batch_size=None):
     """
     This function outputs a dataframe with price diff info 
     
@@ -88,7 +88,10 @@ def price_diff(model,features,label):
     a dataframe with price difference and feature information. 
     """
     result_table = features.copy()
-    pred_price = model.predict(features)
+    if batch_size:
+        pred_price = model.predict(features.values ,batch_size=batch_size).flatten()
+    else:
+        pred_price = model.predict(features)
     diff = (label-pred_price)/label*100
     result_table["price_diff_pct"]=diff
     result_table["price_diff_abs"]=np.abs(diff)
