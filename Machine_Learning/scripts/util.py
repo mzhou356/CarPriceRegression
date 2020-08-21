@@ -40,7 +40,7 @@ def linear_feature_importance(features,model,tree_model=False):
     plt.show()
     return table.sort_values("score",ascending=False) 
 
-def regression_metrics(model,x_train,y_train,x_test,y_test,NN=False,pred_train=None,pred_test=None):
+def regression_metrics(model,x_train,y_train,x_test,y_test,batch_size=None):
     """
     This function outputs model scores (r2 and root mean squared error)
     
@@ -50,15 +50,16 @@ def regression_metrics(model,x_train,y_train,x_test,y_test,NN=False,pred_train=N
     y_train: train label, pandas series
     x_test: test features, pandas dataframe
     y_test: test label, pandas series
+    batch_size: batch_size for predicting NN models
     
     returns:
     r2 score for both train and test 
     root mean squared error for both train and test 
     as a pandas dataframe
     """
-    if NN:
-        pred_train = pred_train
-        pred_test = pred_test
+    if batch_size:
+        pred_train = model.predict(x_train,batch_size=batch_size).flatten()
+        pred_test = model.predict(x_test,batch_size=batch_size).flatten()
     else:
         pred_train = model.predict(x_train)
         pred_test = model.predict(x_test)
