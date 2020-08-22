@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt 
+import seaborn as sns
 import graphviz
 import numpy as np
 import pandas as pd
@@ -180,3 +181,30 @@ def plot_metrics(history,metric):
     plt.title("model training results")
     plt.legend(loc="best")
     plt.show()
+    
+def plot_pred_price(model,X,y,batch_size=None):
+    """
+    This funciton plots predicted price vs actual price, with a r2 score 
+    Also plots residual value distribution 
+    
+    Args:
+    model: trained machine learning model 
+    X: features, pandas dataframe or numpy array
+    y: label, numpy array or pandas Series
+    batch_size: if has a value, it is NN mdl
+    """
+    if batch_size:
+        pred = model.predict(X, batch_size=batch_size).flatten()
+    else:
+        pred = model.predict(X)
+    r2 = r2_score(y,pred)
+    sns.jointplot(y,pred,label=f"r2_score:{r2}",kind="reg")
+    plt.xlabel("price")
+    plt.ylabel("predicted price")
+    plt.legend(loc="best")
+    plt.show()
+    sns.distplot((pred-y))
+    plt.xlabel("error(pred-price)")
+    plt.show()
+  
+   
