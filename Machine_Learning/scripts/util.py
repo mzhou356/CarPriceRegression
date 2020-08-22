@@ -206,5 +206,18 @@ def plot_pred_price(model,X,y,batch_size=None):
     sns.distplot((pred-y))
     plt.xlabel("error(pred-price)")
     plt.show()
-  
-   
+    
+    
+def extract_weights(model,layer_num):
+    """
+    This function returns model weights, bias weights, and bias_initializer for dedicated model layer num
+        
+    Args:
+    model: NN trained model. 
+    layer_num: layer_num, an integer.
+        
+    Returns:
+    a tupe of layer weights, layer bias, and layer bias initializer. 
+    """
+    weights_info = model.layers[layer_num]
+    return (weights_info.weights[0].numpy(),weights_info.weights[1].numpy())
