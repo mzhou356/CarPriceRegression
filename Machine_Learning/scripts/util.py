@@ -14,7 +14,7 @@ tfk = tf.keras;
 tfkl=tf.keras.layers
 
 
-def linear_feature_importance(features,model,tree_model=False):
+def linear_feature_importance(features,model,tree_model=False,NN_weights=None):
     """
     This function creates model feature importance for linear regression
     
@@ -22,12 +22,15 @@ def linear_feature_importance(features,model,tree_model=False):
     features: cols of features, a list 
     model: linear regression model 
     tree_model: boolean, true or false 
+    NN_weights: estimated NN weights. 
     
     returns:
     feature importance pandas dataframe and a bar plot
     """
     if tree_model:
         coefs = model.feature_importances_
+    elif NN_weights is not None:
+        coefs = NN_weights
     else:
         coefs = model.coef_
     table = pd.DataFrame({"features":features,"score":np.abs(coefs)})
@@ -206,5 +209,35 @@ def plot_pred_price(model,X,y,batch_size=None):
     sns.distplot((pred-y))
     plt.xlabel("error(pred-price)")
     plt.show()
-  
-   
+    
+    
+def extract_weights(model,layer_num):
+    """
+    This function returns model weights for the specific model layer num
+        
+    Args:
+    model: NN trained model. 
+    layer_num: layer_num, an integer.
+        
+    Returns:
+    layer weights as numpy array 
+    """
+    weights_info = model.layers[layer_num]
+    return weights_info.weights[0].numpy()
+
+def coeff_estimation(model,layers):
+    """
+    This function estimates layer coefficients by estimating coefficients of the weights avg
+    
+    Args:
+    model: NN trained model. 
+    layers: layers of model 
+    
+    Returns:
+    An array of coefficients. 
+    """
+    mean_weights = extract_weights(model,0)
+    for i in range(1,layers):
+        weights = extract_weights(model,i)
+        mean_weights = np.dot(mean_weights,weights)
+    return mean_weights
