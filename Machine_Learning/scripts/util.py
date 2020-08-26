@@ -79,7 +79,7 @@ def regression_metrics(model,x_train,y_train,x_test,y_test,batch_size=None):
                                           
     return metric_table
    
-def price_diff(model,features,label,batch_size=None):
+def price_diff(model,features,label,batch_size=None,cate=0,features_input=None):
     """
     This function outputs a dataframe with price diff info 
     
@@ -87,13 +87,18 @@ def price_diff(model,features,label,batch_size=None):
     features: dataframe features
     label: label column  
     data: original data
+    cate: if categorical embed default is 0 
+    features_input: for categorical embed model 
     
     returns:
     a dataframe with price difference and feature information. 
     """
     result_table = features.copy()
     if batch_size:
-        pred_price = model.predict(features.values ,batch_size=batch_size).flatten()
+        if cate ==0:
+            pred_price = model.predict(features.values ,batch_size=batch_size).flatten()
+        else:
+            pred_price = model.predict(features_input ,batch_size=batch_size).flatten()
     else:
         pred_price = model.predict(features)
     diff = (label-pred_price)/label*100
@@ -253,7 +258,7 @@ def cate_embed_process(X_train,X_dev,X_test,embed_cols):
     embed_cols: a list of feature name for embeded columns 
     
     Returns:
-    A list of features for train, dev, and test 
+    a list of features for train, dev, and test 
     """
     input_list_train = []
     input_list_dev = []
@@ -263,10 +268,10 @@ def cate_embed_process(X_train,X_dev,X_test,embed_cols):
         raw_values = X_train[c].unique() # get num of unique categories for each categorical features 
         val_map={} # map each categorical to an integer number for embedding 
         for i in range(len(raw_values)):
-            val_map[raw_values[i]] = i 
+            val_map[raw_values[i]] = i+1 
         # map all categories to a value based upon train value only 
         input_list_train.append(X_train[c].map(val_map).values)
-        input_list_dev.append(X_dev[c].map(val_map).fillna(0).values)
+        input_list_dev.append(X_dev[c].map(val_map).fillna(0).values)  # allow null value as its own categorical (class 0 for null)
         input_list_test.append(X_test[c].map(val_map).fillna(0).values)
     # add rest of columns 
     other_cols = [c for c in X_train.columns if c not in embed_cols]
@@ -274,3 +279,68 @@ def cate_embed_process(X_train,X_dev,X_test,embed_cols):
     input_list_dev.append(X_dev[other_cols].values)
     input_list_test.append(X_test[other_cols].values)
     return input_list_train,input_list_dev,input_list_test
+
+def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,metrics,lr):
+    """
+    This function sets up models, one embed layer for each categorical feature and merge with other models 
+    
+    Args:
+    embed_cols: a list of string, feature name for embeded columns 
+    X_train: pandas df, features for training 
+    numeric_types: a list of types for each column 
+    dense_size: a list of input hidden node size for numeric feature model 
+    dense_output_size: a list of output hidden node size after all embed layers added together 
+    droput ratio: for drop out layer, a list 
+    metrics: metrics for optimizing models 
+    lr: learning rate for adam optimizer 
+    
+    Returns:
+    Embeded neural network model 
+    """
+    input_models = [] 
+    output_embeddings = [] 
+    
+    for c in embed_cols:
+        c_emb_name = c+"_embedding"
+        num_unique = X_train[c].nunique()+1 # allow null value for label 0 
+        # use a formula from Jeremy Howard
+        embed_size = int(min(600,round(1.6*np.power(num_unique,0.56))))
+        input_model = tfkl.Input(shape=(1,)) # one categorical features at a time for embed 
+        # each input category gets an embed feature vector 
+        output_model = tfkl.Embedding(num_unique, embed_size, name = c_emb_name)(input_model) 
+#         print(output_model.shape)
+        # reshape embed model so each corresponding row gets its own feature vector 
+        output_model = tfkl.Reshape(target_shape=(embed_size,))(output_model)
+#         print(output_model.shape)
+        
+        # adding all categorical inputs 
+        input_models.append(input_model)
+        
+        # append all embeddings 
+        output_embeddings.append(output_model)
+        
+    #  train other features with one NN layer 
+    input_numeric = tfkl.Input(shape=(len([c for c in X_train.columns if c not in embed_cols]),))
+    for i, size in enumerate(dense_size):
+        if i == 0:
+            embed_numeric = tfkl.Dense(size)(input_numeric)
+        else:
+            embed_numeric = tfkl.Dense(size)(embed_numeric)
+    input_models.append(input_numeric)
+    output_embeddings.append(embed_numeric)
+    
+    # add everything together at the end 
+    # add all output embedding nodes together as one layer 
+    output = tfkl.Concatenate()(output_embeddings)
+    for i, size in enumerate(dense_output_size):
+        output = tfkl.Dense(size,kernel_initializer="uniform",activation = tf.nn.leaky_relu)(output)
+        # not add drop out for last output layer 
+        if i < len(dense_output_size)-1:
+            output = tfkl.Dropout(dropout[i])(output)
+    output = tfkl.Dense(1,activation="linear")(output)
+    
+    model = tfk.models.Model(inputs = input_models, outputs = output)
+    model.compile(loss="mse",optimizer=tf.optimizers.Adam(learning_rate=lr),metrics=metrics)
+    return model 
+     
+    
