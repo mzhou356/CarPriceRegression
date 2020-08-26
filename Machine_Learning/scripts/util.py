@@ -253,7 +253,7 @@ def cate_embed_process(X_train,X_dev,X_test,embed_cols):
     embed_cols: a list of feature name for embeded columns 
     
     Returns:
-    A list of features for train, dev, and test 
+    a list of features for train, dev, and test 
     """
     input_list_train = []
     input_list_dev = []
@@ -263,10 +263,10 @@ def cate_embed_process(X_train,X_dev,X_test,embed_cols):
         raw_values = X_train[c].unique() # get num of unique categories for each categorical features 
         val_map={} # map each categorical to an integer number for embedding 
         for i in range(len(raw_values)):
-            val_map[raw_values[i]] = i 
+            val_map[raw_values[i]] = i+1 
         # map all categories to a value based upon train value only 
         input_list_train.append(X_train[c].map(val_map).values)
-        input_list_dev.append(X_dev[c].map(val_map).fillna(0).values)
+        input_list_dev.append(X_dev[c].map(val_map).fillna(0).values)  # allow null value as its own categorical (class 0 for null)
         input_list_test.append(X_test[c].map(val_map).fillna(0).values)
     # add rest of columns 
     other_cols = [c for c in X_train.columns if c not in embed_cols]
