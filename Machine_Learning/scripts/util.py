@@ -79,7 +79,7 @@ def regression_metrics(model,x_train,y_train,x_test,y_test,batch_size=None):
                                           
     return metric_table
    
-def price_diff(model,features,label,batch_size=None):
+def price_diff(model,features,label,batch_size=None,cate=0,features_input=None):
     """
     This function outputs a dataframe with price diff info 
     
@@ -87,13 +87,18 @@ def price_diff(model,features,label,batch_size=None):
     features: dataframe features
     label: label column  
     data: original data
+    cate: if categorical embed default is 0 
+    features_input: for categorical embed model 
     
     returns:
     a dataframe with price difference and feature information. 
     """
     result_table = features.copy()
     if batch_size:
-        pred_price = model.predict(features.values ,batch_size=batch_size).flatten()
+        if cate ==0:
+            pred_price = model.predict(features.values ,batch_size=batch_size).flatten()
+        else:
+            pred_price = model.predict(features_input ,batch_size=batch_size).flatten()
     else:
         pred_price = model.predict(features)
     diff = (label-pred_price)/label*100
