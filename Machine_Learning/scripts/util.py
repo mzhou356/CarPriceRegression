@@ -275,7 +275,7 @@ def cate_embed_process(X_train,X_dev,X_test,embed_cols):
     input_list_test.append(X_test[other_cols].values)
     return input_list_train,input_list_dev,input_list_test
 
-def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,metrics):
+def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,metrics,lr):
     """
     This function sets up models, one embed layer for each categorical feature and merge with other models 
     
@@ -283,10 +283,11 @@ def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,me
     embed_cols: a list of string, feature name for embeded columns 
     X_train: pandas df, features for training 
     numeric_types: a list of types for each column 
-    dense_size: a list of input hidden node size 
-    dense_output_size: a list of output hidden node size 
+    dense_size: a list of input hidden node size for numeric feature model 
+    dense_output_size: a list of output hidden node size after all embed layers added together 
     droput ratio: for drop out layer, a list 
     metrics: metrics for optimizing models 
+    lr: learning rate for adam optimizer 
     
     Returns:
     Embeded neural network model 
@@ -296,22 +297,23 @@ def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,me
     
     for c in embed_cols:
         c_emb_name = c+"_embedding"
-        num_unique = X_train[c].nunique()
-        if num_unique > 50:
-            embed_size = int(min(np.ceil(num_unique/2),50)) # half or 50 max 
-        else:
-            embed_size = num_unique
+        num_unique = X_train[c].nunique()+1 # allow null value for label 0 
+        # use a formula from Jeremy Howard
+        embed_size = int(min(600,round(1.6*np.power(num_unique,0.56))))
         input_model = tfkl.Input(shape=(1,)) # one categorical features at a time for embed 
+        # each input category gets an embed feature vector 
         output_model = tfkl.Embedding(num_unique, embed_size, name = c_emb_name)(input_model) 
-        print(output_model.shape)
+#         print(output_model.shape)
+        # reshape embed model so each corresponding row gets its own feature vector 
         output_model = tfkl.Reshape(target_shape=(embed_size,))(output_model)
-        print(output_model.shape)
+#         print(output_model.shape)
         
         # adding all categorical inputs 
         input_models.append(input_model)
         
         # append all embeddings 
         output_embeddings.append(output_model)
+        
     #  train other features with one NN layer 
     input_numeric = tfkl.Input(shape=(len([c for c in X_train.columns if c not in embed_cols]),))
     for i, size in enumerate(dense_size):
@@ -322,16 +324,18 @@ def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,me
     input_models.append(input_numeric)
     output_embeddings.append(embed_numeric)
     
-    # add everythign together at the end 
+    # add everything together at the end 
+    # add all output embedding nodes together as one layer 
     output = tfkl.Concatenate()(output_embeddings)
     for i, size in enumerate(dense_output_size):
         output = tfkl.Dense(size,kernel_initializer="uniform",activation = tf.nn.leaky_relu)(output)
+        # not add drop out for last output layer 
         if i < len(dense_output_size)-1:
             output = tfkl.Dropout(dropout[i])(output)
     output = tfkl.Dense(1,activation="linear")(output)
     
     model = tfk.models.Model(inputs = input_models, outputs = output)
-    model.compile(loss="mse",optimizer="Adam",metrics=metrics)
+    model.compile(loss="mse",optimizer=tf.optimizers.Adam(learning_rate=lr),metrics=metrics)
     return model 
      
     
