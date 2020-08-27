@@ -280,7 +280,7 @@ def cate_embed_process(X_train,X_dev,X_test,embed_cols):
     input_list_test.append(X_test[other_cols].values)
     return input_list_train,input_list_dev,input_list_test
 
-def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,metrics,lr):
+def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,metrics,lr,embed_size_multiplier=1.0):
     """
     This function sets up models, one embed layer for each categorical feature and merge with other models 
     
@@ -293,6 +293,7 @@ def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,me
     droput ratio: for drop out layer, a list 
     metrics: metrics for optimizing models 
     lr: learning rate for adam optimizer 
+    embed_size_multiplier: float, adjusts embedsize 
     
     Returns:
     Embeded neural network model 
@@ -304,7 +305,7 @@ def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,me
         c_emb_name = c+"_embedding"
         num_unique = X_train[c].nunique()+1 # allow null value for label 0 
         # use a formula from Jeremy Howard
-        embed_size = int(min(600,round(1.6*np.power(num_unique,0.56))))
+        embed_size = int(min(600,round(1.6*np.power(num_unique,0.56)))*embed_size_multiplier)
         input_model = tfkl.Input(shape=(1,)) # one categorical features at a time for embed 
         # each input category gets an embed feature vector 
         output_model = tfkl.Embedding(num_unique, embed_size, name = c_emb_name)(input_model) 
