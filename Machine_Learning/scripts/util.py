@@ -275,10 +275,9 @@ def cate_embed_process(X_train,X_dev,X_test,embed_cols):
         input_list_test.append(X_test[c].map(val_map).fillna(0).values)
     # add rest of columns 
     other_cols = [c for c in X_train.columns if c not in embed_cols]
-    if len(other_cols) > 0:
-        input_list_train.append(X_train[other_cols].values)
-        input_list_dev.append(X_dev[other_cols].values)
-        input_list_test.append(X_test[other_cols].values)
+    input_list_train.append(X_train[other_cols].values)
+    input_list_dev.append(X_dev[other_cols].values)
+    input_list_test.append(X_test[other_cols].values)
     return input_list_train,input_list_dev,input_list_test
 
 def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,metrics,lr,embed_size_multiplier=1.0):
@@ -322,16 +321,14 @@ def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,me
         output_embeddings.append(output_model)
         
     #  train other features with one NN layer 
-    numeric_cols = [c for c in X_train.columns if c not in embed_cols]
-    if len(numeric_cols)>0:
-        input_numeric = tfkl.Input(shape=(len(numeric_cols),))
-        for i, size in enumerate(dense_size):
-            if i == 0:
-                embed_numeric = tfkl.Dense(size)(input_numeric)
-            else:
-                embed_numeric = tfkl.Dense(size)(embed_numeric)
-        input_models.append(input_numeric)
-        output_embeddings.append(embed_numeric)
+    input_numeric = tfkl.Input(shape=(len([c for c in X_train.columns if c not in embed_cols]),))
+    for i, size in enumerate(dense_size):
+        if i == 0:
+            embed_numeric = tfkl.Dense(size)(input_numeric)
+        else:
+            embed_numeric = tfkl.Dense(size)(embed_numeric)
+    input_models.append(input_numeric)
+    output_embeddings.append(embed_numeric)
     
     # add everything together at the end 
     # add all output embedding nodes together as one layer 
