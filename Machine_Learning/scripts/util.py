@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt 
 import seaborn as sns
+from functools import partial 
 import graphviz
 import numpy as np
 import pandas as pd
@@ -305,8 +306,8 @@ def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,me
     for c in embed_cols:
         c_emb_name = c+"_embedding"
         num_unique = X_train[c].nunique()+1 # allow null value for label 0 
-        # use a formula from Jeremy Howard
-        embed_size = int(min(600,round(1.6*np.power(num_unique,0.56)))*embed_size_multiplier)
+        # use a formula from fastai
+        embed_size = int(min(50,num_unique/2*embed_size_multiplier))
         input_model = tfkl.Input(shape=(1,)) # one categorical features at a time for embed 
         # each input category gets an embed feature vector 
         output_model = tfkl.Embedding(num_unique, embed_size, name = c_emb_name)(input_model) 
@@ -347,4 +348,25 @@ def embed_model_setup(embed_cols,X_train,dense_size,dense_output_size,dropout,me
     model.compile(loss="mse",optimizer=tf.optimizers.Adam(learning_rate=lr),metrics=metrics)
     return model 
      
+def param_search(params,mdl_setup,train_input_c,y_train_c,dev_input_c,y_dev_c,xlog=True,ylog=True):
+    """
+    Plots learning rate over loss for lr search
+    
+    Args:
+    lr_rates: a list of learning rates 
+    mdl_setup: output of model_setup func, partial function 
+    xlog,ylog: scale for the graph 
+    """
+    losses = []
+    for p in params:
+        hist = mdl_setup(p).fit(train_input_c,y_train_c, epochs=1,shuffle=True,verbose = 1, 
+                              validation_data=(dev_input_c,y_dev_c))
+        loss = hist.history["loss"][0]
+        losses.append(loss)
+    plt.plot(params,losses)
+    if xlog:
+        plt.xscale("log")
+    if ylog:
+        plt.yscale("log")
+    plt.show()
     
