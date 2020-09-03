@@ -2,17 +2,19 @@
 import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
+import seaborn as sns
 from sklearn.metrics import r2_score,mean_squared_error
 from sklearn.model_selection import train_test_split, GridSearchCV
 
 class carPrice():
     def __init__(self,data, regressor, NN = False, tree = False,batch_size = None):
         self.features = data.drop("price",axis=1)
-        self.trimmmed_features = None
+        self.trimmed_features = None
         self.label = data.price 
         self.base = regressor 
         self.regressor = regressor 
         self.NN = NN
+        self.embed = False
         self.Tree = tree
         self.tuned=False
         self.gridResult = None 
@@ -20,7 +22,7 @@ class carPrice():
         
         
     def removeFeatures(self, n ):
-        feature_table = self.linear_feature_importance()
+        feature_table = self.linear_feature_importance(plot=False)
         features_remove = feature_table.head(n).features 
         self.trimmed_features = self.features.drop(features_remove,axis=1)
         
@@ -81,7 +83,7 @@ class carPrice():
         self.tuned = True
         self.gridResult = searchGrid
         
-    def linear_feature_importance(self):
+    def linear_feature_importance(self,plot=True):
         """
         This function creates model feature importance for linear regression
     
@@ -102,12 +104,81 @@ class carPrice():
         else:
             coefs = model.coef_
         table = pd.DataFrame({"features":self.features.columns,"score":np.abs(coefs)})
-        table.sort_values("score",ascending=False).head(20).plot.barh(x="features",y="score",figsize=(6,8),label="coef")
-        plt.title("top 20 features")
-        plt.legend(loc="top right")
-        plt.show()
-        table.sort_values("score").head(20).plot.barh(x="features",y="score",figsize=(6,8),label="coef")
-        plt.title("bottom 20 features")
-        plt.legend(loc="lower right")
-        plt.show()
+        if plot:
+            table.sort_values("score",ascending=False).head(20).plot.barh(x="features",y="score",figsize=(6,8),label="coef")
+            plt.title("top 20 features")
+            plt.legend(loc="top right")
+            plt.show()
+            table.sort_values("score").head(20).plot.barh(x="features",y="score",figsize=(6,8),label="coef")
+            plt.title("bottom 20 features")
+            plt.legend(loc="lower right")
+            plt.show()
         return table.sort_values("score") 
+    
+    def price_diff(self,batch_size=None,embed_input_list=None,embed_y=None,trimmed=False):
+        """
+        This function outputs a dataframe with price diff info 
+    
+        args:
+        features: dataframe features
+        label: label column  
+        data: original data
+        cate: if categorical embed default is 0 
+        features_input: for categorical embed model 
+    
+        returns:
+        a dataframe with price difference and feature information. 
+        """
+        model = self.regressor
+        label = self.label
+        if trimmed:
+            result_table = self.trimmed_features.copy()
+        else:
+            result_table = self.features
+        if self.NN:
+            if self.embed:
+                label = embed_y
+                pred_price = model.predict(embed_input_list, batch_size=batch_size).flatten()
+            else:
+                pred_price = model.predict(result_table.values, batch_size=batch_size).flatten()
+        else:
+            pred_price = model.predict(result_table)
+        diff = (pred_price-label)/label*100
+        result_table["price_diff_pct"]=diff
+        result_table["price_diff_abs"]=np.abs(diff)
+        return result_table.sort_values("price_diff_abs",ascending=False)
+    
+    def plot_pred_price(self,X_embed=None,y_embed=None,batch_size=None,trimmed=False):
+        """
+        This funciton plots predicted price vs actual price, with a r2 score 
+        Also plots residual value distribution 
+    
+        Args:
+        model: trained machine learning model 
+        X: features, pandas dataframe or numpy array
+        y: label, numpy array or pandas Series
+        batch_size: if has a value, it is NN mdl
+        """
+        if trimmed:
+            features = self.trimmed_features
+        else:
+            features = self.features
+        model = self.regressor
+        y = self.label
+        if self.NN:
+            if self.embed:
+                y = y_embed
+                pred = model.predict(X_embed, batch_size=batch_size).flatten()
+            else:
+                pred = model.predict(features.values,batch_size-batch_size).flatten()
+        else:
+            pred = model.predict(features)
+        r2 = r2_score(y,pred)
+        sns.jointplot(y,pred,label=f"r2_score:{r2}",kind="reg")
+        plt.xlabel("price")
+        plt.ylabel("predicted price")
+        plt.legend(loc="best")
+        plt.show()
+        sns.distplot((pred-y))
+        plt.xlabel("error(pred-price)")
+        plt.show()
