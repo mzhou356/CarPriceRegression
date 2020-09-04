@@ -134,7 +134,7 @@ class carPrice():
         if trimmed:
             result_table = self.trimmed_features.copy()
         else:
-            result_table = self.features
+            result_table = self.features.copy()
         if self.NN:
             if self.embed:
                 label = embed_y
