@@ -14,99 +14,6 @@ tensorflow.compat.v1.logging.set_verbosity(tensorflow.compat.v1.logging.ERROR)
 tfk = tf.keras;
 tfkl=tf.keras.layers
 
-
-def linear_feature_importance(features,model,tree_model=False,NN_weights=None):
-    """
-    This function creates model feature importance for linear regression
-    
-    args:
-    features: cols of features, a list 
-    model: linear regression model 
-    tree_model: boolean, true or false 
-    NN_weights: estimated NN weights. 
-    
-    returns:
-    feature importance pandas dataframe and a bar plot
-    """
-    if tree_model:
-        coefs = model.feature_importances_
-    elif NN_weights is not None:
-        coefs = NN_weights
-    else:
-        coefs = model.coef_
-    table = pd.DataFrame({"features":features,"score":np.abs(coefs)})
-    table.sort_values("score",ascending=False).head(20).plot.barh(x="features",y="score",figsize=(6,8),label="coef")
-    plt.title("top 20 features")
-    plt.legend(loc="top right")
-    plt.show()
-    table.sort_values("score").head(20).plot.barh(x="features",y="score",figsize=(6,8),label="coef")
-    plt.title("bottom 20 features")
-    plt.legend(loc="lower right")
-    plt.show()
-    return table.sort_values("score",ascending=False) 
-
-def regression_metrics(model,x_train,y_train,x_test,y_test,batch_size=None):
-    """
-    This function outputs model scores (r2 and root mean squared error)
-    
-    args:
-    model: a trained model 
-    x_train: train features, pandas dataframe
-    y_train: train label, pandas series
-    x_test: test features, pandas dataframe
-    y_test: test label, pandas series
-    batch_size: batch_size for predicting NN models
-    
-    returns:
-    r2 score for both train and test 
-    root mean squared error for both train and test 
-    as a pandas dataframe
-    """
-    if batch_size:
-        pred_train = model.predict(x_train,batch_size=batch_size).flatten()
-        pred_test = model.predict(x_test,batch_size=batch_size).flatten()
-    else:
-        pred_train = model.predict(x_train)
-        pred_test = model.predict(x_test)
-    r2_train = r2_score(y_train,pred_train)
-    r2_test = r2_score(y_test,pred_test)
-    rmse_train = np.sqrt(mean_squared_error(y_train,pred_train))
-    rmse_test = np.sqrt(mean_squared_error(y_test,pred_test))
-    metric_table = pd.DataFrame({"r2_score":[r2_train,r2_test],"rmse":[rmse_train,rmse_test]},
-                                index=["train","test"])
-    metric_table["price_diff_abs_max"] = [np.max(np.abs((y_train-pred_train)/y_train*100)),
-                                          np.max(np.abs((y_test-pred_test)/y_test*100))
-                                         ]
-                                          
-    return metric_table
-   
-def price_diff(model,features,label,batch_size=None,cate=0,features_input=None):
-    """
-    This function outputs a dataframe with price diff info 
-    
-    args:
-    features: dataframe features
-    label: label column  
-    data: original data
-    cate: if categorical embed default is 0 
-    features_input: for categorical embed model 
-    
-    returns:
-    a dataframe with price difference and feature information. 
-    """
-    result_table = features.copy()
-    if batch_size:
-        if cate ==0:
-            pred_price = model.predict(features.values ,batch_size=batch_size).flatten()
-        else:
-            pred_price = model.predict(features_input ,batch_size=batch_size).flatten()
-    else:
-        pred_price = model.predict(features)
-    diff = (label-pred_price)/label*100
-    result_table["price_diff_pct"]=diff
-    result_table["price_diff_abs"]=np.abs(diff)
-    return result_table
-
 def tree_plot(model,feature_names):
     """
     This function outputs decision tree plot 
@@ -191,30 +98,7 @@ def plot_metrics(history,metric):
     plt.legend(loc="best")
     plt.show()
     
-def plot_pred_price(model,X,y,batch_size=None):
-    """
-    This funciton plots predicted price vs actual price, with a r2 score 
-    Also plots residual value distribution 
-    
-    Args:
-    model: trained machine learning model 
-    X: features, pandas dataframe or numpy array
-    y: label, numpy array or pandas Series
-    batch_size: if has a value, it is NN mdl
-    """
-    if batch_size:
-        pred = model.predict(X, batch_size=batch_size).flatten()
-    else:
-        pred = model.predict(X)
-    r2 = r2_score(y,pred)
-    sns.jointplot(y,pred,label=f"r2_score:{r2}",kind="reg")
-    plt.xlabel("price")
-    plt.ylabel("predicted price")
-    plt.legend(loc="best")
-    plt.show()
-    sns.distplot((pred-y))
-    plt.xlabel("error(pred-price)")
-    plt.show()
+
     
     
 def extract_weights(model,layer_num):
