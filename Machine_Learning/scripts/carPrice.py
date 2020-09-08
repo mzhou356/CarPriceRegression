@@ -1,10 +1,18 @@
 ### This creates a carPrice Class for machine learning 
 import pandas as pd
-import numpy as np 
+import numpy as np
+import tensorflow
+import tensorflow.compat.v2 as tf 
 import matplotlib.pyplot as plt 
 import seaborn as sns
 from sklearn.metrics import r2_score,mean_squared_error
 from sklearn.model_selection import train_test_split, GridSearchCV
+tensorflow.compat.v1.logging.set_verbosity(tensorflow.compat.v1.logging.ERROR)
+
+
+
+tfk = tf.keras;
+tfkl=tf.keras.layers
 
 class carPrice():
     def __init__(self,data, regressor, NN = False, tree = False,batch_size = None):
@@ -18,7 +26,8 @@ class carPrice():
         self.Tree = tree
         self.tuned=False
         self.gridResult = None 
-        self.batch_size = None 
+        self.batch_size = batch_size
+        self.history = None 
         
         
     def removeFeatures(self, n ):
@@ -34,15 +43,21 @@ class carPrice():
         X_train, X_test, y_train, y_test = train_test_split(features,self.label, test_size = test_size, random_state=seed)
         return X_train,X_test,y_train,y_test 
     
-    def train_model(self,X,y):
+    def train_model(self,X=None,y=None,train_dataset = None,dev_dataset=None,epochs=None, V = 0, callbacks=None):
         if self.tuned ==True:
             model = self.gridResult.best_estimator_
         else:
             model = self.base 
-        model.fit(X,y)
+        if self.NN:
+            self.history = model.fit(train_dataset, epochs = epochs,
+                                     shuffle=True,verbose=V,validation_data=dev_dataset,
+                                     callbacks=callbacks)
+        else:
+            model.fit(X,y)
         self.regressor = model 
   
-    def regression_metrics(self,x_train,y_train,x_test,y_test):
+    def regression_metrics(self,x_train,y_train,x_test,y_test,retrain=True,train_dataset=None,dev_dataset=None,epochs=None,
+                          V=0,callbacks=None):
         """
         This function outputs model scores (r2 and root mean squared error)
     
@@ -57,7 +72,11 @@ class carPrice():
         root mean squared error for both train and test 
         as a pandas dataframe
         """
-        self.train_model(x_train,y_train)
+        if retrain:
+            if self.NN:
+                self.train_model(train_dataset=train_dataset,dev_dataset=dev_dataset,epochs=epochs,V=V, callbacks=callbacks)
+            else:
+                self.train_model(x_train,y_train)
         model = self.regressor 
         if self.batch_size != None:
             pred_train = model.predict(x_train,batch_size=self.batch_size).flatten()
@@ -83,7 +102,7 @@ class carPrice():
         self.tuned = True
         self.gridResult = searchGrid
         
-    def linear_feature_importance(self,plot=True):
+    def linear_feature_importance(self,plot=True,NN_coefs = None):
         """
         This function creates model feature importance for linear regression
     
@@ -98,7 +117,7 @@ class carPrice():
         """
         model = self.regressor 
         if self.NN:
-            coefs = NN_weights 
+            coefs = NN_coefs
         elif self.Tree:
             coefs = model.feature_importances_
         else:
@@ -115,7 +134,7 @@ class carPrice():
             plt.show()
         return table.sort_values("score") 
     
-    def price_diff(self,batch_size=None,embed_input_list=None,embed_y=None,trimmed=False):
+    def price_diff(self,embed_input_list=None,embed_y=None,trimmed=False):
         """
         This function outputs a dataframe with price diff info 
     
@@ -138,9 +157,9 @@ class carPrice():
         if self.NN:
             if self.embed:
                 label = embed_y
-                pred_price = model.predict(embed_input_list, batch_size=batch_size).flatten()
+                pred_price = model.predict(embed_input_list, batch_size=self.batch_size).flatten()
             else:
-                pred_price = model.predict(result_table.values, batch_size=batch_size).flatten()
+                pred_price = model.predict(result_table.values, batch_size=self.batch_size).flatten()
         else:
             pred_price = model.predict(result_table)
         diff = (pred_price-label)/label*100
@@ -148,7 +167,7 @@ class carPrice():
         result_table["price_diff_abs"]=np.abs(diff)
         return result_table.sort_values("price_diff_abs",ascending=False)
     
-    def plot_pred_price(self,X_embed=None,y_embed=None,batch_size=None,trimmed=False):
+    def plot_pred_price(self,X_embed=None,y_embed=None,trimmed=False):
         """
         This funciton plots predicted price vs actual price, with a r2 score 
         Also plots residual value distribution 
@@ -168,9 +187,9 @@ class carPrice():
         if self.NN:
             if self.embed:
                 y = y_embed
-                pred = model.predict(X_embed, batch_size=batch_size).flatten()
+                pred = model.predict(X_embed, batch_size=self.batch_size).flatten()
             else:
-                pred = model.predict(features.values,batch_size-batch_size).flatten()
+                pred = model.predict(features.values,batch_size=self.batch_size).flatten()
         else:
             pred = model.predict(features)
         r2 = r2_score(y,pred)
