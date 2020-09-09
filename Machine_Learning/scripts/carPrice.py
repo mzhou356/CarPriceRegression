@@ -15,14 +15,14 @@ tfk = tf.keras;
 tfkl=tf.keras.layers
 
 class carPrice():
-    def __init__(self,data, regressor, NN = False, tree = False,batch_size = None):
+    def __init__(self,data, regressor, NN = False, tree = False,batch_size = None,embed=False):
         self.features = data.drop("price",axis=1)
         self.trimmed_features = None
         self.label = data.price 
         self.base = regressor 
         self.regressor = regressor 
         self.NN = NN
-        self.embed = False
+        self.embed = embed
         self.Tree = tree
         self.tuned=False
         self.gridResult = None 
@@ -49,7 +49,13 @@ class carPrice():
         else:
             model = self.base 
         if self.NN:
-            self.history = model.fit(train_dataset, epochs = epochs,
+            if self.embed:
+                train_input,y_train = train_dataset
+                self.history = model.fit(train_input,y_train,epochs=epochs,
+                                         shuffle=True,verbose=V,validation_data=dev_dataset,
+                                         callbacks=callbacks)
+            else:
+                self.history = model.fit(train_dataset, epochs = epochs,
                                      shuffle=True,verbose=V,validation_data=dev_dataset,
                                      callbacks=callbacks)
         else:
