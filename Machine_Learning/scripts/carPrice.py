@@ -115,13 +115,6 @@ class carPrice:
         returns:
         feature importance pandas dataframe and a bar plot
         """
-#         model = self.regressor 
-# #         if self.NN:
-# #             coefs = NN_coefs
-# #         elif self.Tree:
-# #             coefs = model.feature_importances_
-# #         else:
-#         coefs = model.coef_
         coefs = self.calculateCoef();
         table = pd.DataFrame({"features":self.features.columns,"score":np.abs(coefs)})
         if plot:
@@ -233,5 +226,7 @@ class NNCarPrice(carPrice):
             self.train_model(train_dataset,dev_dataset=dev_dataset,V=V)
         model = self.regressor 
         return model.predict(x,batch_size=self.batch_size).flatten()
-                                   
     
+    def calculateCoef(self):
+        model = self.regressor 
+        return model.coef_
