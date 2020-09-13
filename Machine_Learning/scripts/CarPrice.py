@@ -44,7 +44,7 @@ class CarPrice:
     
     def train_model(self,X,y):
         if self._tuned:
-            search_result = copy.deepcopy(self._search_result)
+            search_result = copy.deepcopy(self.search_result)
             model = search_result.best_estimator_
         else:
             model = self._base 
@@ -65,7 +65,7 @@ class CarPrice:
     def calculate_pred(self,x,y,retrain):
         if retrain:
             self.train_model(x,y)
-        model = self._trained_model
+        model = self.trained_model
         return model.predict(x)
     
       
@@ -101,7 +101,7 @@ class CarPrice:
     
     @property
     def calculateCoef(self):
-        model = self._trained_model
+        model = self.trained_model
         return model.coef_
     
     def linear_feature_importance(self,plot=True):
@@ -150,7 +150,7 @@ class CarPrice:
         returns:
         a dataframe with price difference and feature information. 
         """
-        model = self._trained_model
+        model = self.trained_model
         if self._trimmed:
             result_table = self._trimmed_features.copy()
         else:
@@ -171,7 +171,6 @@ class CarPrice:
             features = self._trimmed_features
         else:
             features = self._features
-        model = self._trimmed_features
         y = self._label
         pred = self.calculate_pred(features,y,retrain=False)
         r2 = r2_score(y,pred)
