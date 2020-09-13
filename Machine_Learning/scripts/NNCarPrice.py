@@ -102,7 +102,7 @@ class NNCarPrice(CarPrice):
         Returns:
         layer weights as numpy array 
         """
-        model = self.regressor
+        model = self.trained_model
         weights_info = model.layers[layer_num]
         return weights_info.weights[0].numpy()
     
@@ -118,12 +118,12 @@ class NNCarPrice(CarPrice):
         Returns:
         An array of coefficients. 
         """
-        mean_weights = extract_weights(0)
-        layers = self.layers
+        mean_weights = self.extract_weights(0)
+        layers = self._layers
         for i in range(1,layers):
-            weights = extract_weights(i)
+            weights = self.extract_weights(i)
             mean_weights = np.dot(mean_weights,weights)
-        return mean_weights
+        return mean_weights.flatten()
     
     def plot_metrics(self,metric):
         """
