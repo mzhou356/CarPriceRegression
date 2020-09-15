@@ -69,7 +69,7 @@ class NNCarPrice(CarPrice):
         self._dev_dataset = dev_set
         
     @classmethod
-    def make_model(cls,sizes,input_size, metrics, l2 = 10e-5, lr = 1e-4):
+    def make_model(cls,sizes,input_size, metrics, l2, lr):
         """
         This function creates tensorflow regression model and use l2 to regularize the 
         activate output. 
@@ -146,21 +146,21 @@ class NNCarPrice(CarPrice):
         plt.legend(loc="best")
         plt.show()
         
-    def param_search(self,params,mdl_setup,train_data_set,dev_dataset,V,xlog=True,ylog=True,metrics="loss"):
+    def param_search(self,params,partial_setup,V,xlog=True,ylog=True,optimizer="loss"):
         """
         Plots paramsearch for one epoch only
     
         Args:
         params: a list of parameters 
-        mdl_setup: output of model_setup func, partial function 
+        partial_setup: output of model_setup func, partial function 
         xlog,ylog: scale for the graph 
         """
         metrics = []
         for p in params:
-            hist = mdl_setup(p).fit(train_data_set, epochs=1,shuffle=True,verbose = V,
-                              validation_data=dev_dataset)
-        metric = hist.history[metrics][0]
-        metrics.append(metric)
+            hist = partial_setup(p).fit(self._train_dataset, epochs=1,shuffle=True,verbose = V,
+                              validation_data=self._dev_dataset)
+            metric = hist.history[optimizer][0]
+            metrics.append(metric)
         plt.plot(params,metrics)
         if xlog:
             plt.xscale("log")
