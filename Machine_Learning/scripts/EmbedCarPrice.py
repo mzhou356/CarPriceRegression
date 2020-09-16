@@ -1,12 +1,24 @@
 from NNCarPrice import *
 
 class EmbedCarPrice(NNCarPrice):    
-    def __init__(self,data,NN_model,batch_size,epochs,callbacks):
-        super().__init__(data,NN_model,batch_size,epochs,callbacks)
+    def __init__(self,data,batch_size,epochs,callbacks):
+        self._features = data.drop("price",axis=1)
+        self._label = data.price 
+        self._trimmed_features = None
+        self._trimmed = False
+        self._base = None
+        self._trained_model = None
+        self._history = None;
+        self._batch_size = batch_size
+        self._epochs = epochs
+        self._callbacks = callbacks
         self._feature_list = None
         self._train_list = None
         self._dev_list = None
         self._test_list =None
+    
+    def set_base_model(self,model):
+        self._base = model
         
     @property   
     def train_model(self):
@@ -61,7 +73,7 @@ class EmbedCarPrice(NNCarPrice):
         self._feature_list = input_feature
         self._train_list = (input_list_train,y_train)
         self._dev_list = (input_list_dev,y_dev)
-        self.test_list = input_list_test
+        self._test_list = input_list_test
         
     @classmethod
     def embed_model_setup(cls,embed_cols,X_train,dense_size,dense_output_size,dropout,metrics,lr,embed_size_multiplier=1.0):
@@ -171,3 +183,50 @@ class EmbedCarPrice(NNCarPrice):
         sns.distplot((pred-y))
         plt.xlabel("error(pred-price)")
         plt.show()
+        
+    @property
+    def calculateCoef(self):
+        """
+        This function estimates layer coefficients by estimating coefficients of the weights avg
+    
+        Args:
+        embed_size: num of embed an int 
+    
+        Returns:
+        An array of coefficients. 
+        """
+        return "not available for EmbedCarPrice"
+    
+        
+    def linear_feature_importance(self,plot=True):
+        """
+        This function creates model feature importance for linear regression
+        
+        returns:
+        feature importance pandas dataframe and a bar plot
+        """
+        return "not availbale for EmbedCarprice"
+        
+    def param_search(self,params,partial_setup,V,xlog=True,ylog=True,optimizer="loss"):
+        """
+        Plots paramsearch for one epoch only
+    
+        Args:
+        params: a list of parameters 
+        partial_setup: output of model_setup func, partial function 
+        xlog,ylog: scale for the graph 
+        """
+        metrics = []
+        for p in params:
+            hist = partial_setup(p).fit(self._train_list[0],self._train_list[1], epochs=1,shuffle=True,verbose = V,
+                              validation_data=self._dev_list)
+            metric = hist.history[optimizer][0]
+            metrics.append(metric)
+        plt.plot(params,metrics)
+        if xlog:
+            plt.xscale("log")
+        if ylog:
+            plt.yscale("log")
+        plt.show()
+    
+        
