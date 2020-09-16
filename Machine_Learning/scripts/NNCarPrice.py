@@ -8,7 +8,7 @@ tfkl=tf.keras.layers
 
 class NNCarPrice(CarPrice):
     def __init__(self,data,NN_model,batch_size,epochs,callbacks):
-        super().__init__(data,NN_model)
+        super().__init__(self,data,NN_model)
         self._history = None;
         self._batch_size = batch_size
         self._epochs = epochs
