@@ -30,7 +30,7 @@ def readData(dirpath,ext):
             datas.append(df)
     return pd.concat(datas,axis=0)
 
-def EDA_CAT_func(colname,target,df,fontsize, figsize,layout,boxplot=False):
+def EDA_CAT_func(colname,target,df,fontsize, figsize,layout=None,boxplot=False):
     """
     This function performs basic exploratory data analyses on a specific feature column,
     This column needs to be categorical in nature. 
@@ -51,11 +51,12 @@ def EDA_CAT_func(colname,target,df,fontsize, figsize,layout,boxplot=False):
     """
     groupedDF = df.groupby(colname)
     count_df = groupedDF[target].count().reset_index().sort_values(target)
+    count_df.columns = [colname, "counts"]
     if boxplot:
         groupedDF.boxplot(column=target,fontsize=fontsize,
                                        figsize=figsize,layout=layout)
         plt.show()
-    groupedDF[target].median().reset_index().sort_values("price").plot.scatter(x=colname,y=target,rot=90,figsize=figsize)
+    groupedDF[target].median().reset_index().sort_values(colname).plot.scatter(x=colname,y=target,rot=90,figsize=figsize)
     plt.show()
     return count_df
 
@@ -74,7 +75,7 @@ def binning_func(col,thresholds):
     for k, v in thresholds.items():
         if col>=k[0] and col<=k[1]:
             return v
-    
+        
 def chiSquareTest(col1,col2):
     """
     This function allows this callable function to be used for pandas corr method parameter. 
@@ -87,3 +88,23 @@ def chiSquareTest(col1,col2):
     pvalue for one way chisquare test. 
     """
     return chisquare(col1,col2).pvalue
+        
+def cat_feature_corr(df,cols_to_drop,chiTest = False,):
+    """
+    This function creates a dataframe of correation between categorical features using spearman or chisquaretest 
+    
+    Args:
+    df: pandas dataframe. 
+    chiTest: chisquare or spearman 
+    cols_to_drop: a list of string (cols to drop that are not categorical features).
+   
+    
+    Returns:
+    a pandas dataframe of categorical feature correlation. 
+    """
+    df_factored = df.drop(cols_to_drop,axis=1).apply(lambda x: pd.factorize(x)[0])+1 
+    if chiTest:
+        result = df_factored.corr(method=chiSquareTest)
+    else:
+        result = df_factored.corr(method="spearman")
+    return result
