@@ -6,7 +6,7 @@ tensorflow.compat.v1.logging.set_verbosity(tensorflow.compat.v1.logging.ERROR)
 tfk = tf.keras;
 tfkl=tf.keras.layers
 
-class NNCarPrice(CarPrice):
+class NNCarPrice(LinearCarPrice):
     def __init__(self,data,NN_model,batch_size,epochs,callbacks):
         super().__init__(self,data,NN_model)
         self._history = None;
@@ -14,27 +14,18 @@ class NNCarPrice(CarPrice):
         self._epochs = epochs
         self._callbacks = callbacks
         self._layers = len(NN_model.layers)
-        self._train_dataset = None
-        self._dev_dataset = None
-        
-    def data_split(self,seed,test_size):
-        X_train,X_test,y_train,y_test = super().data_split(seed,test_size)
-        X_train,X_dev,y_train,y_dev = train_test_split(X_train,y_train,
-                                                       test_size = test_size,random_state=seed)
-        return X_train,X_test,y_train,y_test,X_dev,y_dev
     
-    @property
-    def train_model(self):
+    def train_model(self,train_dataset,dev_dataset):
         model = self._base
-        self._history = model.fit(self._train_dataset, epochs = self._epochs,
-                                     shuffle=True,verbose=1,validation_data=self._dev_dataset,
+        self._history = model.fit(self.train_dataset, epochs = self._epochs,
+                                     shuffle=True,verbose=1,validation_data=self.dev_dataset,
                                      callbacks=self._callbacks)
         self._trained_model = model
         
     def calculate_pred(self,x,y,retrain=True):
         if retrain:
-            self.train_model
-        model = self.trained_model
+            self._train_model
+        model = self._trained_model
         return model.predict(x.values,batch_size=self._batch_size).flatten()
     
     @staticmethod
@@ -48,25 +39,6 @@ class NNCarPrice(CarPrice):
         gpus = tf.config.experimental.list_physical_devices("GPU")
         tf.config.experimental.set_virtual_device_configuration(gpus[0],
         [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*n)]) 
-  
-    def make_tensor_dataset(self,X_train,y_train,X_dev,y_dev):
-        """
-        This function generates tensorflow train and test dataset for NN.
-    
-        args:
-        X: a pandas dataframes, features 
-        y: a pandas series, label 
-      
-    
-        returns:
-        tensforflow dataset
-        """
-        train_set = tf.data.Dataset.from_tensor_slices((X_train.values,
-                 y_train.values)).batch(self._batch_size).prefetch(tf.data.experimental.AUTOTUNE).shuffle(X_train.shape[0])
-        dev_set = tf.data.Dataset.from_tensor_slices((X_dev.values,
-                 y_dev.values)).batch(self._batch_size).prefetch(tf.data.experimental.AUTOTUNE).shuffle(X_dev.shape[0])
-        self._train_dataset = train_set
-        self._dev_dataset = dev_set
         
     @classmethod
     def make_model(cls,sizes,input_size, metrics, l2, lr):
@@ -145,8 +117,8 @@ class NNCarPrice(CarPrice):
         plt.title("model training results")
         plt.legend(loc="best")
         plt.show()
-        
-    def param_search(self,params,partial_setup,V,xlog=True,ylog=True,optimizer="loss"):
+    @classmethod   
+    def param_search(cls,params,partial_setup,train_dataset, dev_dataset,V,xlog=True,ylog=True,optimizer="loss"):
         """
         Plots paramsearch for one epoch only
     
@@ -157,8 +129,8 @@ class NNCarPrice(CarPrice):
         """
         metrics = []
         for p in params:
-            hist = partial_setup(p).fit(self._train_dataset, epochs=1,shuffle=True,verbose = V,
-                              validation_data=self._dev_dataset)
+            hist = partial_setup(p).fit(self.train_dataset, epochs=1,shuffle=True,verbose = V,
+                              validation_data=self.dev_dataset)
             metric = hist.history[optimizer][0]
             metrics.append(metric)
         plt.plot(params,metrics)
