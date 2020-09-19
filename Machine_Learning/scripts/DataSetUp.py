@@ -2,20 +2,19 @@
 import numpy as np
 import pandas as pd
 import tensorflow.compat.v2 as tf 
+from sklearn.model_selection import train_test_split
 
 class DataSetUp:
-    def __init__(self,input_data,label):
+    def __init__(self,features,label):
         """
-        input_data: pandas dataframe  
         label: a pandas Series, label column
         feature: feature columns without the label column
         val_map: only for categorical embedding, mapping for categorical mapping 
         embed_cols: only for categorical embedding, columns for embedding
         non_embed_cols: only for categorical embedding, columns for non embedded columns 
         """
-        self._input_data = data
-        self._label = data[label] 
-        self._features = data.drop(label,axis=1)
+        self._label = label
+        self._features = features
         self._val_map = None
         self._embed_cols = None
         self._non_emebd_cols = None
@@ -33,10 +32,11 @@ class DataSetUp:
         """
         X_train, X_test, y_train, y_test = train_test_split(self._features,self._label, 
                                                             test_size = test_size, random_state=seed)
+        return X_train,X_test,y_train,y_test
         if dev_set:
             X_train,X_dev,y_train,y_dev = train_test_split(X_train,y_train,
                                                        test_size = dev_size,random_state=dev_seed)
-        return X_train,X_dev,X_test,y_train,y_dev,y_test 
+            return X_train,X_dev,X_test,y_train,y_dev,y_test 
     
     def make_tensor_dataset(self,X,y,batch_size):
         """
