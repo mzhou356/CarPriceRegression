@@ -151,7 +151,7 @@ class CarPriceLinear:
         result_table["price_diff_abs"]=np.abs(diff)
         return result_table.sort_values("price_diff_abs",ascending=False)
     
-    def plot_pred_price(self,X,y):
+    def plot_pred_price(self,X,y,retrain=False):
         """
         This funciton plots predicted price vs actual price, with a r2 score 
         Also plots residual value distribution 
@@ -159,8 +159,9 @@ class CarPriceLinear:
         args:
         input features to caluclate price difference 
         label to compare results
+        retrain: retrain model on the entire feature set 
         """
-        pred = self.calculate_pred(X,y,retrain=False)
+        pred = self.calculate_pred(X,y,retrain=retrain)
         r2 = r2_score(y,pred)
         sns.jointplot(y,pred,label=f"r2_score:{r2}",kind="reg")
         plt.xlabel("price")
