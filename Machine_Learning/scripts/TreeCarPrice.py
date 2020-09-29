@@ -1,11 +1,11 @@
 import graphviz
 from sklearn import tree
-from CarPrice import *
+from LinearCarPrice import *
 
-class treeCarPrice(LinearCarPrice):
-    def __init__(self,data, regressor,oneTree):
-        super().__init__(data,regressor)
-        self.oneTree = oneTree
+class treeCarPrice(CarPriceLinear):
+    def __init__(self,regressor,oneTree):
+        super().__init__(regressor)
+        self._oneTree = oneTree
             
     @property
     def calculateCoef(self):
