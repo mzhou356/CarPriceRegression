@@ -1,13 +1,13 @@
 import tensorflow
 import tensorflow.compat.v2 as tf 
-from CarPrice import *
+from LinearCarPrice import *
 tensorflow.compat.v1.logging.set_verbosity(tensorflow.compat.v1.logging.ERROR)
 
 tfk = tf.keras;
 tfkl=tf.keras.layers
 
-class NNCarPrice(LinearCarPrice):
-    def __init__(self,data,NN_model,batch_size,epochs,callbacks):
+class NNCarPrice(CarPriceLinear):
+    def __init__(self,NN_model,batch_size,epochs,callbacks):
         super().__init__(self,data,NN_model)
         self._history = None;
         self._batch_size = batch_size
