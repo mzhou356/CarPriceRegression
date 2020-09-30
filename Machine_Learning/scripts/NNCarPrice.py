@@ -8,25 +8,49 @@ tfkl=tf.keras.layers
 
 class NNCarPrice(CarPriceLinear):
     def __init__(self,NN_model,batch_size,epochs,callbacks):
-        super().__init__(self,data,NN_model)
+        super().__init__(NN_model)
         self._history = None;
         self._batch_size = batch_size
         self._epochs = epochs
         self._callbacks = callbacks
         self._layers = len(NN_model.layers)
     
-    def train_model(self,train_dataset,dev_dataset):
+    def train_model(self,train_dataset,dev_dataset,V):
         model = self._base
-        self._history = model.fit(self.train_dataset, epochs = self._epochs,
-                                     shuffle=True,verbose=1,validation_data=self.dev_dataset,
+        self._history = model.fit(train_dataset, epochs = self._epochs,
+                                     shuffle=True,verbose=V,validation_data=dev_dataset,
                                      callbacks=self._callbacks)
         self._trained_model = model
         
-    def calculate_pred(self,x,y,retrain=True):
+    def calculate_pred(self,x,y,retrain=True,train_dataset=None,dev_dataset=None,V=1):
         if retrain:
-            self._train_model
+            self.train_model(train_dataset,dev_dataset,V)
         model = self._trained_model
         return model.predict(x.values,batch_size=self._batch_size).flatten()
+    
+    def regression_metrics(self,X,y,ind,retrain=True,train_dataset=None,dev_dataset=None,V=1):
+        """
+        This function outputs model scores (r2 and root mean squared error)
+    
+        args:
+        X: features, pandas dataframe
+        y: label, pandas series
+        ind: a string, index for the metrics, "train","test","dev"
+        retrain: boolean, retrain model or use trained model 
+        train_dataset: only if retrain is true for NN 
+        dev_dataset: only if retrain is true for NN
+        
+        returns:
+        r2 score and root mean squared error for data_set, price different abs max % 
+        as a pandas dataframe
+        """     
+        pred = self.calculate_pred(X,y,retrain,train_dataset,dev_dataset,V)
+        R2 = r2_score(y,pred)
+        rmse = np.sqrt(mean_squared_error(y,pred))
+        metric_table = pd.DataFrame({"r2_score":[R2],"rmse":[rmse]},
+                                index=[ind])
+        metric_table["price_diff_abs_max"] = [np.max(np.abs((y-pred)/y*100))]                          
+        return metric_table
     
     @staticmethod
     def set_gpu_limit(n):
@@ -74,7 +98,7 @@ class NNCarPrice(CarPriceLinear):
         Returns:
         layer weights as numpy array 
         """
-        model = self.trained_model
+        model = self._trained_model
         weights_info = model.layers[layer_num]
         return weights_info.weights[0].numpy()
     
