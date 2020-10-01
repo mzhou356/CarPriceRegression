@@ -68,7 +68,7 @@ class DataSetUp:
         
         """
         self._embed_cols = embed_cols 
-        self._non_emebd_cols = [c for c in X_train.columns if c not in embed_cols]
+        self._non_embed_cols = [c for c in X_train.columns if c not in embed_cols]
         for c in embed_cols:
             raw_values = X_train[c].unique()
             val_map = {}
@@ -87,7 +87,7 @@ class DataSetUp:
        
         Returns:
         a python list of features appropriate for categorical embedding 
-        """
+        """ 
         input_list_X = []
         
         for c in self._embed_cols:

@@ -2,22 +2,13 @@ from NNCarPrice import *
 
 class EmbedCarPrice(NNCarPrice):    
     
-    def set_base_model(self,model):
-        self._base = model
-  
-    def train_model(self,train_list,y_train,dev_list,y_dev):
+    def train_model(self,train_dataset,dev_dataset,V):
         model = self._base
-        self._history = model.fit(train_list,y_train, epochs = self._epochs,
-                                     shuffle=True,verbose=1,validation_data=(dev_list,y_dev),
+        self._history = model.fit(train_dataset[0],train_dataset[1], epochs = self._epochs,
+                                     shuffle=True,verbose=V,validation_data=dev_dataset,
                                      callbacks=self._callbacks)
         self._trained_model = model
-        
-    def calculate_pred(self,x,y,retrain=True):
-        if retrain:
-            self._train_model
-        model = self._trained_model
-        return model.predict(x,batch_size=self._batch_size).flatten()
-
+       
     @classmethod
     def embed_model_setup(cls,embed_cols,non_embed_cols,X_train,dense_size,dense_output_size,
                           dropout,metrics,lr,embed_size_multiplier=1.0):
@@ -57,7 +48,7 @@ class EmbedCarPrice(NNCarPrice):
             output_embeddings.append(output_model)
         #  train other features with one NN layer        
         if len(non_embed_cols)>0:
-            input_numeric = tfkl.Input(shape=(len(numeric_cols),))
+            input_numeric = tfkl.Input(shape=(len(non_embed_cols),))
             for i, size in enumerate(dense_size):
                 if i == 0:
                     embed_numeric = tfkl.Dense(size)(input_numeric)
@@ -101,8 +92,28 @@ class EmbedCarPrice(NNCarPrice):
         """
         return "not availbale for EmbedCarprice"
     
+    def price_diff(self,X,y,X_list):
+        """
+        This function outputs a dataframe with price diff info 
+        
+        args:
+        input features to caluclate price difference 
+        label to compare results 
+        X_list: converted features for cate embed 
+    
+        returns:
+        a dataframe with price difference and feature information. 
+        """
+        model = self._trained_model
+        result_table = X.copy()
+        pred_price = self.calculate_pred(X_list,y,retrain=False)
+        diff = (pred_price-y)/y*100
+        result_table["price_diff_pct"]=diff
+        result_table["price_diff_abs"]=np.abs(diff)
+        return result_table.sort_values("price_diff_abs",ascending=False)
+        
     @classmethod    
-    def param_search(cls,params,partial_setup,train_input_list,y_train,dev_input_list,y_dev,
+    def param_search(cls,params,partial_setup,train_dataset,dev_dataset,
                      V,xlog=True,ylog=True,optimizer="loss"):
         """
         Plots paramsearch for one epoch only
@@ -114,8 +125,8 @@ class EmbedCarPrice(NNCarPrice):
         """
         metrics = []
         for p in params:
-            hist = partial_setup(p).fit(train_input_list,y_train, epochs=1,shuffle=True,verbose = V,
-                              validation_data=(dev_input_list,y_dev))
+            hist = partial_setup(p).fit(train_dataset[0],train_dataset[1], epochs=1,shuffle=True,verbose = V,
+                              validation_data=dev_dataset)
             metric = hist.history[optimizer][0]
             metrics.append(metric)
         plt.plot(params,metrics)

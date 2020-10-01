@@ -21,12 +21,12 @@ class NNCarPrice(CarPriceLinear):
                                      shuffle=True,verbose=V,validation_data=dev_dataset,
                                      callbacks=self._callbacks)
         self._trained_model = model
-        
+                
     def calculate_pred(self,x,y,retrain=True,train_dataset=None,dev_dataset=None,V=1):
         if retrain:
             self.train_model(train_dataset,dev_dataset,V)
         model = self._trained_model
-        return model.predict(x.values,batch_size=self._batch_size).flatten()
+        return model.predict(x,batch_size=self._batch_size).flatten()
     
     def regression_metrics(self,X,y,ind,retrain=True,train_dataset=None,dev_dataset=None,V=1):
         """
@@ -153,8 +153,8 @@ class NNCarPrice(CarPriceLinear):
         """
         metrics = []
         for p in params:
-            hist = partial_setup(p).fit(self.train_dataset, epochs=1,shuffle=True,verbose = V,
-                              validation_data=self.dev_dataset)
+            hist = partial_setup(p).fit(train_dataset, epochs=1,shuffle=True,verbose = V,
+                              validation_data=dev_dataset)
             metric = hist.history[optimizer][0]
             metrics.append(metric)
         plt.plot(params,metrics)
