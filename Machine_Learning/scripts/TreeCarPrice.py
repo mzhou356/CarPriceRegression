@@ -19,11 +19,11 @@ class treeCarPrice(CarPriceLinear):
         args:
         features: a list of strings, input features column names 
         """
-        if self.oneTree:
+        if self._oneTree:
             model = self._trained_model
             dot_data = tree.export_graphviz(model,feature_names=features,
                                     rounded=True)
             graph = graphviz.Source(dot_data,format="png")
             return graph
         else:
-            print("This function requires only one tree")
+            raise NotImplementedError("This function requires only one tree")
