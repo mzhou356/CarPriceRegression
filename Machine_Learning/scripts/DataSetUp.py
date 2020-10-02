@@ -15,7 +15,7 @@ class DataSetUp:
         """
         self._label = label
         self._features = features
-        self._val_map = None
+        self._val_maps = None
         self._embed_cols = None
         self._non_emebd_cols = None
     
@@ -67,15 +67,16 @@ class DataSetUp:
         embed_cols:a list of feature name for embed columns 
         
         """
+        val_maps = {}
         self._embed_cols = embed_cols 
         self._non_embed_cols = [c for c in X_train.columns if c not in embed_cols]
         for c in embed_cols:
             raw_values = X_train[c].unique()
-            val_map = {}
+            val_maps[c] = {}
             for i in range(len(raw_values)):
                 # start with zero so fillna with zero shows the category in new dataset is not in any existing categories) 
-                val_map[raw_values[i]]=i+1 
-        self._val_map = val_map    
+                val_maps[c][raw_values[i]]=i+1 
+        self._val_maps = val_maps    
     
     def cate_data_list(self,X):
         """
@@ -91,7 +92,7 @@ class DataSetUp:
         input_list_X = []
         
         for c in self._embed_cols:
-            input_list_X.append(X[c].map(self._val_map).fillna(0).values)
+            input_list_X.append(X[c].map(self._val_maps[c]).fillna(0).values)
         # add rest of columns 
         if len(self._non_embed_cols) > 0:
             input_list_X.append(X[self._non_embed_cols].values)
