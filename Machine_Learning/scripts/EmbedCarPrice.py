@@ -1,14 +1,6 @@
 from NNCarPrice import *
 
-class EmbedCarPrice(NNCarPrice):    
-    
-    def train_model(self,train_dataset,dev_dataset,V):
-        model = self._base
-        self._history = model.fit(train_dataset[0],train_dataset[1], epochs = self._epochs,
-                                     shuffle=True,verbose=V,validation_data=dev_dataset,
-                                     callbacks=self._callbacks)
-        self._trained_model = model
-       
+class EmbedCarPrice(NNCarPrice):           
     @classmethod
     def embed_model_setup(cls,embed_cols,non_embed_cols,X_train,dense_size,dense_output_size,
                           dropout,metrics,lr,embed_size_multiplier=1.0):
@@ -80,7 +72,7 @@ class EmbedCarPrice(NNCarPrice):
         Returns:
         An array of coefficients. 
         """
-        return "not available for EmbedCarPrice"
+        raise NotImplementedError("not available for EmbedCarPrice")
     
         
     def linear_feature_importance(self,plot=True):
@@ -90,7 +82,7 @@ class EmbedCarPrice(NNCarPrice):
         returns:
         feature importance pandas dataframe and a bar plot
         """
-        return "not availbale for EmbedCarprice"
+        raise NotImplementedError("not availbale for EmbedCarprice")
     
     def price_diff(self,X,y,X_list):
         """
@@ -111,27 +103,3 @@ class EmbedCarPrice(NNCarPrice):
         result_table["price_diff_pct"]=diff
         result_table["price_diff_abs"]=np.abs(diff)
         return result_table.sort_values("price_diff_abs",ascending=False)
-        
-    @classmethod    
-    def param_search(cls,params,partial_setup,train_dataset,dev_dataset,
-                     V,xlog=True,ylog=True,optimizer="loss"):
-        """
-        Plots paramsearch for one epoch only
-    
-        Args:
-        params: a list of parameters 
-        partial_setup: output of model_setup func, partial function 
-        xlog,ylog: scale for the graph 
-        """
-        metrics = []
-        for p in params:
-            hist = partial_setup(p).fit(train_dataset[0],train_dataset[1], epochs=1,shuffle=True,verbose = V,
-                              validation_data=dev_dataset)
-            metric = hist.history[optimizer][0]
-            metrics.append(metric)
-        plt.plot(params,metrics)
-        if xlog:
-            plt.xscale("log")
-        if ylog:
-            plt.yscale("log")
-        plt.show()      
