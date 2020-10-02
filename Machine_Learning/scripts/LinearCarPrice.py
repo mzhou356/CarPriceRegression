@@ -46,7 +46,8 @@ class CarPriceLinear:
     def save_model(self,file_path):
         joblib.dump(self._trained_model,file_path)
         
-    def load_model(self,file_path):
+    @classmethod     
+    def load_model(cls,file_path):
         joblib.load(file_path)
 
     @property
