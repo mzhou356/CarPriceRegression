@@ -17,7 +17,9 @@ class NNCarPrice(CarPriceLinear):
     
     def train_model(self,train_dataset,dev_dataset,V):
         model = self._base
-        self._history = model.fit(train_dataset, epochs = self._epochs,
+        if not isinstance(train_dataset,tuple):
+            train_dataset = (train_dataset,)
+        self._history = model.fit(*train_dataset, epochs = self._epochs,
                                      shuffle=True,verbose=V,validation_data=dev_dataset,
                                      callbacks=self._callbacks)
         self._trained_model = model
@@ -141,6 +143,7 @@ class NNCarPrice(CarPriceLinear):
         plt.title("model training results")
         plt.legend(loc="best")
         plt.show()
+    
     @classmethod   
     def param_search(cls,params,partial_setup,train_dataset, dev_dataset,V,xlog=True,ylog=True,optimizer="loss"):
         """
@@ -151,9 +154,11 @@ class NNCarPrice(CarPriceLinear):
         partial_setup: output of model_setup func, partial function 
         xlog,ylog: scale for the graph 
         """
+        if not isinstance(train_dataset,tuple):
+            train_dataset = (train_dataset,)     
         metrics = []
         for p in params:
-            hist = partial_setup(p).fit(train_dataset, epochs=1,shuffle=True,verbose = V,
+            hist = partial_setup(p).fit(*train_dataset, epochs=1,shuffle=True,verbose = V,
                               validation_data=dev_dataset)
             metric = hist.history[optimizer][0]
             metrics.append(metric)
@@ -163,10 +168,10 @@ class NNCarPrice(CarPriceLinear):
         if ylog:
             plt.yscale("log")
         plt.show()
+           
+    def save_model(self,filepath):
+        self._trained_model.save(filepath)
         
-    @classmethod    
-    def save_model(cls,model,filepath):
-        model.save(filepath)
     @classmethod    
     def load_model(cls,filepath):
         return tfk.models.load_model(filepath,custom_objects={"leaky_relu":tf.nn.leaky_relu})
