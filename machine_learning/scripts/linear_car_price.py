@@ -62,7 +62,7 @@ class CarPriceLinear:
         """
         loads model based upon file_path.
         """
-        joblib.load(file_path)
+        return joblib.load(file_path)
 
     @property
     def search_result(self):
