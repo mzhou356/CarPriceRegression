@@ -113,7 +113,7 @@ class CarPriceLinear:
         return metric_table
 
     @property
-    def calculate_coef(self):
+    def __calculate_coef(self):
         """
         extracts feature importance of the model.
         """
@@ -130,7 +130,7 @@ class CarPriceLinear:
         returns:
         feature importance pandas dataframe and a bar plot
         """
-        coefs = self.calculate_coef
+        coefs = self.__calculate_coef
         table = pd.DataFrame({"features":features.columns, "score":np.abs(coefs)})
         if plot:
             table.sort_values(

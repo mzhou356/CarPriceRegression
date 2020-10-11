@@ -18,11 +18,11 @@ class DataSetUp:
         embed_cols: only for categorical embedding, columns for embedding
         non_embed_cols: only for categorical embedding, columns for non embedded columns
         """
-        self._label = label
-        self._features = features
-        self._val_maps = None
-        self._embed_cols = None
-        self._non_emebd_cols = None
+        self.__label = label
+        self.__features = features
+        self.__val_maps = None
+        self.__embed_cols = None
+        self.__non_emebd_cols = None
 
     def data_split(self, seed, test_size, dev_set=False, dev_seed=None, dev_size=None):
         """
@@ -36,7 +36,7 @@ class DataSetUp:
         pandas data frame of train, test or train, test, and dev
         """
         x_train, x_test, y_train, y_test = train_test_split(
-            self._features, self._label, test_size=test_size, random_state=seed)
+            self.__features, self.__label, test_size=test_size, random_state=seed)
         if dev_set:
             x_train, x_dev, y_train, y_dev = train_test_split(
                 x_train, y_train, test_size=dev_size, random_state=dev_seed)
@@ -70,8 +70,8 @@ class DataSetUp:
         embed_cols:a list of feature name for embed columns
         """
         val_maps = {}
-        self._embed_cols = embed_cols
-        self._non_embed_cols = [col for col in x_train.columns if col not in embed_cols]
+        self.__embed_cols = embed_cols
+        self.__non_embed_cols = [col for col in x_train.columns if col not in embed_cols]
         for col in embed_cols:
             raw_values = x_train[col].unique()
             val_maps[col] = {}
@@ -79,7 +79,7 @@ class DataSetUp:
         # start with zero so fillna with zero shows the category in
         # new dataset is not in any existing categories)
                 val_maps[col][raw_values[i]] = i+1
-        self._val_maps = val_maps
+        self.__val_maps = val_maps
 
     def cate_data_list(self, X):
         """
@@ -95,9 +95,9 @@ class DataSetUp:
         """
         input_list_x = []
 
-        for col in self._embed_cols:
-            input_list_x.append(X[col].map(self._val_maps[col]).fillna(0).values)
+        for col in self.__embed_cols:
+            input_list_x.append(X[col].map(self.__val_maps[col]).fillna(0).values)
         # add rest of columns
-        if len(self._non_embed_cols) > 0:
-            input_list_x.append(X[self._non_embed_cols].values)
+        if len(self.__non_embed_cols) > 0:
+            input_list_x.append(X[self.__non_embed_cols].values)
         return input_list_x
