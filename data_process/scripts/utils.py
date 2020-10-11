@@ -1,9 +1,10 @@
 # pylint: disable=too-many-arguments
 #!/usr/bin/env python3
 """
-This script contains helper function to process data for carPrice regression model.
+This script contains helper functions to process data for car price regression models.
 """
 import os
+import pickle as pkl
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import chisquare
@@ -110,3 +111,14 @@ def cat_feature_corr(df, cols_to_drop, chi_test=False,):
     else:
         result = df_factored.corr(method="spearman")
     return result
+
+def save_object(filename, python_object):
+    """
+    This function saves object into a pickle format.
+
+    Args:
+    filename: a string, name to save the python object as a pickle object.
+    python_object: a dictionary, a list, or any other python objects.
+    """
+    with open(filename, "wb") as f_handle:
+        pkl.dump(python_object, f_handle, protocol=pkl.HIGHEST_PROTOCOL)
