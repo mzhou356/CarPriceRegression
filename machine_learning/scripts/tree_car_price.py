@@ -22,11 +22,11 @@ class TreeCarPrice(CarPriceLinear):
         self.__one_tree = one_tree
 
     @property
-    def __calculate_coef(self):
+    def calculate_coef(self):
         """
         This extracts feature importance for tree based models.
         """
-        model = self.__trained_model
+        model = self.trained_model
         return model.feature_importances_
 
     def tree_plot(self, features):

@@ -26,6 +26,13 @@ class CarPriceLinear:
         self.__base = regressor
         self.__trained_model = None
         self.__search_result = None
+       
+    @property   
+    def trained_model(self):
+        """
+        This returns trained_model as a getter function.
+        """
+        return self.__trained_model
 
     def reset_trained_model(self, model):
         """
@@ -113,7 +120,7 @@ class CarPriceLinear:
         return metric_table
 
     @property
-    def __calculate_coef(self):
+    def calculate_coef(self):
         """
         extracts feature importance of the model.
         """
@@ -130,7 +137,7 @@ class CarPriceLinear:
         returns:
         feature importance pandas dataframe and a bar plot
         """
-        coefs = self.__calculate_coef
+        coefs = self.calculate_coef
         table = pd.DataFrame({"features":features.columns, "score":np.abs(coefs)})
         if plot:
             table.sort_values(
