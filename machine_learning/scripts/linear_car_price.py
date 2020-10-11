@@ -23,9 +23,9 @@ class CarPriceLinear:
         trained_model: tuned model
         search_result: if gridSearch is performed, it will have search result
         """
-        self._base = regressor
-        self._trained_model = None
-        self._search_result = None
+        self.__base = regressor
+        self.__trained_model = None
+        self.__search_result = None
 
     def reset_trained_model(self, model):
         """
@@ -33,7 +33,7 @@ class CarPriceLinear:
         """
         if model is None:
             print("model is not valid")
-        self._trained_model = model
+        self.__trained_model = model
 
     def train_model(self, X, y):
         """
@@ -43,19 +43,19 @@ class CarPriceLinear:
         X: features
         y: label
         """
-        if self._search_result:
-            search_result = copy.deepcopy(self.search_result)
+        if self.__search_result:
+            search_result = copy.deepcopy(self.__search_result)
             model = search_result.best_estimator_
         else:
-            model = self._base
+            model = self.__base
         model.fit(X, y)
-        self._trained_model = model
+        self.__trained_model = model
 
     def save_model(self, file_path):
         """
         saves trained model.
         """
-        joblib.dump(self._trained_model, file_path)
+        joblib.dump(self.__trained_model, file_path)
 
     @classmethod
     def load_model(cls, file_path):
@@ -69,17 +69,17 @@ class CarPriceLinear:
         """
         getter for gridsearchCV results.
         """
-        return self._search_result
+        return self.__search_result
 
     def param_search(self, params, X, y, verbose=1, metrics="neg_root_mean_squared_error",
                      worker_num=22):
         """
         perform gridsearchCV to get best params
         """
-        search_grid = GridSearchCV(self._base, params, scoring=metrics,
+        search_grid = GridSearchCV(self.__base, params, scoring=metrics,
                                    n_jobs=worker_num, verbose=verbose)
         search_grid.fit(X, y)
-        self._search_result = search_grid
+        self.__search_result = search_grid
 
     def calculate_pred(self, X, y, retrain):
         """
@@ -87,7 +87,7 @@ class CarPriceLinear:
         """
         if retrain:
             self.train_model(X, y)
-        model = self._trained_model
+        model = self.__trained_model
         return model.predict(X)
 
     def regression_metrics(self, X, y, ind, retrain=True):
@@ -117,7 +117,7 @@ class CarPriceLinear:
         """
         extracts feature importance of the model.
         """
-        model = self._trained_model
+        model = self.__trained_model
         return model.coef_
 
     def linear_feature_importance(self, features, plot=True):
