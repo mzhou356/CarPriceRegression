@@ -26,7 +26,14 @@ class CarPriceLinear:
         self.__base = regressor
         self.__trained_model = None
         self.__search_result = None
-       
+    
+    @property
+    def base(self):
+        """
+        This method returns base model. 
+        """
+        return self.__base
+  
     @property   
     def trained_model(self):
         """

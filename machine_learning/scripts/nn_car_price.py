@@ -24,23 +24,23 @@ class NnCarPrice(CarPriceLinear):
         callbacks: early stop based upon certain metrics.
         """
         super().__init__(nn_model)
-        self._history = None
-        self._batch_size = batch_size
-        self._epochs = epochs
-        self._callbacks = callbacks
-        self._layers = len(nn_model.layers)
+        self.__history = None
+        self.__batch_size = batch_size
+        self.__epochs = epochs
+        self.__callbacks = callbacks
+        self.__layers = len(nn_model.layers)
 
     def train_model(self, train_dataset, dev_dataset, verbose):
         """
         method to train neural networks.
         """
-        model = self._base
+        model = self.base
         if not isinstance(train_dataset, tuple):
             train_dataset = (train_dataset,)
-        self._history = model.fit(*train_dataset, epochs=self._epochs,
-                                  shuffle=True, verbose=verbose, validation_data=dev_dataset,
-                                  callbacks=self._callbacks)
-        self._trained_model = model
+        self.__history = model.fit(*train_dataset, epochs=self.__epochs,
+                                   shuffle=True, verbose=verbose, validation_data=dev_dataset,
+                                   callbacks=self.__callbacks)
+        self.reset_trained_model(model)
 
     def calculate_pred(self, X, y, retrain=True, train_dataset=None,
                        dev_dataset=None, verbose=1):
@@ -49,8 +49,8 @@ class NnCarPrice(CarPriceLinear):
         """
         if retrain:
             self.train_model(train_dataset, dev_dataset, verbose)
-        model = self._trained_model
-        return model.predict(X, batch_size=self._batch_size).flatten()
+        model = self.trained_model
+        return model.predict(X, batch_size=self.__batch_size).flatten()
 
     def regression_metrics(self, X, y, ind, retrain=True,
                            train_dataset=None, dev_dataset=None, verbose=1):
@@ -125,7 +125,7 @@ class NnCarPrice(CarPriceLinear):
         Returns:
         layer weights as numpy array
         """
-        model = self._trained_model
+        model = self.trained_model
         weights_info = model.layers[layer_num]
         return weights_info.weights[0].numpy()
 
@@ -143,7 +143,7 @@ class NnCarPrice(CarPriceLinear):
         An array of coefficients.
         """
         mean_weights = self.extract_weights(0)
-        layers = self._layers
+        layers = self.__layers
         for i in range(1, layers):
             weights = self.extract_weights(i)
             mean_weights = np.dot(mean_weights, weights)
@@ -161,7 +161,7 @@ class NnCarPrice(CarPriceLinear):
         A plot that shows 2 overlapping loss versus epoch images.
         red is for test and blue is for train.
         """
-        history = self._history.history
+        history = self.__history.history
         plt.plot(history[metric], color="blue", label="train")
         plt.plot(history[f"val_{metric}"], color="red", label="test")
         plt.xlabel("epoch")
@@ -200,7 +200,7 @@ class NnCarPrice(CarPriceLinear):
         """
         This method saves the trained model.
         """
-        self._trained_model.save(filepath)
+        self.trained_model.save(filepath)
 
     @classmethod
     def load_model(cls, filepath):
