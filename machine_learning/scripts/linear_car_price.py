@@ -77,7 +77,7 @@ class CarPriceLinear:
         perform gridsearchCV to get best params
         """
         search_grid = GridSearchCV(self.__base, params, scoring=metrics,
-                                   n_jobs=worker_num, verbose=verbose)
+                                   n_jobs=worker_num, verbose=verbose, refit=False)
         search_grid.fit(X, y)
         self.__search_result = search_grid
 
