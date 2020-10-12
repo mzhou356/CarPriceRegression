@@ -24,6 +24,13 @@ class DataSetUp:
         self.__embed_cols = None
         self.__non_emebd_cols = None
 
+    @property
+    def val_maps(self):
+        """
+        This method retrieves categorical feature mapping.
+        """
+        return self.__val_maps
+
     def data_split(self, seed, test_size, dev_set=False, dev_seed=None, dev_size=None):
         """
         seed: random state for data split

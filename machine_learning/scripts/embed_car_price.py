@@ -93,6 +93,12 @@ class EmbedCarPrice(NnCarPrice):
         """
         raise NotImplementedError("not availbale for EmbedCarprice")
 
+    def remove_features(self, features, num):
+        """
+        This function removes features in machine learning models.
+        """
+        raise NotImplementedError("not availble for EmbedCarprice")
+
     def price_diff(self, X, y, x_list):
         """
         This function outputs a dataframe with price diff info
