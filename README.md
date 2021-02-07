@@ -1,3 +1,6 @@
+- Check out the application [here](https://mindy-dossett.com/2020/10/26/Car-Price-App/
+)
+
 # CarPriceRegression
   - Predict the price of a car using various regression models.
   
